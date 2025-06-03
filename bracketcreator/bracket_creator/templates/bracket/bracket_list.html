@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Your Brackets</h2>
+<a href="{% url 'bracket-create' %}">Create New Bracket</a>
+<ul class="list-group">
+    {% for bracket in object_list %}
+        <li>
+            <a href="{% url 'bracket-detail' bracket.id %}">{{ bracket.name }}</a>
+            <small>Participants: {{ bracket.participants.count }}</small>
+            <small>Created {{ bracket.created_at|date:"M d, Y" }}</small>
+        </li>
+    {% empty %}
+        <p>You haven't created any brackets yet.</p>
+    {% endfor %}
+</ul>
+{% endblock %}

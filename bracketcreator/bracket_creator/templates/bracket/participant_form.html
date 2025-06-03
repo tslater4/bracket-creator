@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Name Participants for "{{ bracket.name }}"</h2>
+<form method="post">
+    {% csrf_token %}
+    {{ formset.management_form }}
+    {% for form in formset %}    
+    <div class="form-group">
+        <label for="{{ form.name.id_for_label }}">Participant {{ forloop.counter }}:</label>
+        {{ form.name }}
+        {% if form.errors %}
+            <div>
+                {{ form.errors }}
+            </div>
+        {% endif %}
+    </div>
+
+    {% endfor %}
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.querySelector('form');
+        const submitButton = form.querySelector('button[type="submit"]');
+        const nameInputs = form.querySelectorAll('input');
+
+        function checkInputs() {
+            let allFilled = true;
+            nameInputs.forEach(input => {
+                if (!input.value.trim()) {
+                    allFilled = false;
+                }
+            });
+            submitButton.disabled = !allFilled;
+        }
+
+        nameInputs.forEach(input => {
+            input.addEventListener('input', checkInputs);
+        });
+
+        checkInputs();
+    });
+    </script>
+    <button type="submit">Save Participants</button>
+</form>
+{% endblock %}
