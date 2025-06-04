@@ -14,5 +14,6 @@
         onclick="return confirm('Are you sure you want to delete this bracket?');">
         Delete
     </button>
+    <a href="{% url 'participant-update' object.pk %}">Edit Participants</a>
 </form>
 {% endblock %}

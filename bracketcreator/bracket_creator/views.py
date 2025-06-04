@@ -3,14 +3,15 @@ from django.shortcuts import render
 # Create your views here.
 
 from django.contrib.auth.forms import UserCreationForm
-from django.shortcuts import render, redirect
-from django.views.generic import ListView, CreateView, DetailView
+from django.shortcuts import render, redirect, get_object_or_404
+from django.views import View
+from django.views.generic import ListView, CreateView, DetailView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
-from django.views.generic import DeleteView
 from django import forms
 from django.forms import inlineformset_factory, modelformset_factory
 from .models import TournamentBracket, Participant
+
 
 def signup_view(request):
     if request.method == 'POST':
@@ -107,3 +108,48 @@ class BracketDeleteView(LoginRequiredMixin, DeleteView):
 
     def get_queryset(self):
         return self.model.objects.filter(user=self.request.user)
+    
+
+class BracketUpdateView(LoginRequiredMixin, View):
+    template_name = 'bracket/update_form.html'
+
+    def get(self, request, bracket_pk):
+        bracket = TournamentBracket.objects.get(pk=bracket_pk, user=request.user)
+        bracket_form = TournamentBracketForm(instance=bracket)
+        ParticipantFormSet = modelformset_factory(
+            Participant,
+            fields=['name'],
+            extra=0,
+            can_delete=True
+        )
+        formset = ParticipantFormSet(queryset=Participant.objects.filter(bracket=bracket).order_by('id'))
+        return render(request, self.template_name, {
+            'formset': formset,
+            'bracket_form': bracket_form,
+            'bracket': bracket
+        })
+
+    def post(self, request, bracket_pk):
+        bracket = TournamentBracket.objects.get(pk=bracket_pk, user=request.user)
+        bracket_form = TournamentBracketForm(request.POST, instance=bracket)
+        ParticipantFormSet = modelformset_factory(
+            Participant,
+            fields=['name'],
+            extra=0,
+            can_delete=True
+        )
+        formset = ParticipantFormSet(request.POST, queryset=Participant.objects.filter(bracket=bracket).order_by('id'))
+        if bracket_form.is_valid() and formset.is_valid():
+            bracket_form.save()
+            instances = formset.save(commit=False)
+            for instance in instances:
+                instance.bracket = bracket
+                instance.save()
+            for obj in formset.deleted_objects:
+                obj.delete()
+            return redirect('bracket-detail', pk=bracket.pk)
+        return render(request, self.template_name, {
+            'formset': formset,
+            'bracket_form': bracket_form,
+            'bracket': bracket
+        })

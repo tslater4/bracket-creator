@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Edit Bracket and Participants for "{{ bracket.name }}"</h2>
+<form method="post">
+    {% csrf_token %}
+    <h3>Bracket Info</h3>
+    <p>
+        {{ bracket_form.name.label_tag }} {{ bracket_form.name }}
+        {{ bracket_form.size.as_hidden }}
+    </p>
+
+    <h3>Participants</h3>
+    {{ formset.management_form }}
+    {% for form in formset %}
+        <div class="form-group">
+            {% for hidden in form.hidden_fields %}
+                {{ hidden }}
+            {% endfor %}
+            {{ form.name.label_tag }} {{ form.name }}
+            {% if form.errors %}
+                <div>{{ form.errors }}</div>
+            {% endif %}
+            {% if form.can_delete %}
+                {{ form.DELETE }} <label>Delete</label>
+            {% endif %}
+        </div>
+    {% endfor %}
+    <button type="submit">Save Changes</button>
+</form>
+{% endblock %}

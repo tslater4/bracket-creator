@@ -1,5 +1,3 @@
-from django.db import models
-
 # Create your models here.
 
 from django.db import models
@@ -20,3 +18,6 @@ class TournamentBracket(models.Model):
 class Participant(models.Model):
     name = models.CharField(max_length=100)
     bracket = models.ForeignKey(TournamentBracket, on_delete=models.CASCADE, related_name="participants")
+
+    class Meta:
+        ordering = ['id']

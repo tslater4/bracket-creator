@@ -4,8 +4,16 @@
 <form method="post">
     {% csrf_token %}
     {{ formset.management_form }}
+    {% if formset.non_form_errors %}
+        <div class="alert alert-danger">
+            {{ formset.non_form_errors }}
+        </div>
+    {% endif %}
     {% for form in formset %}    
     <div class="form-group">
+        {% for hidden in form.hidden_fields %}
+            {{ hidden }}
+        {% endfor %}
         <label for="{{ form.name.id_for_label }}">Participant {{ forloop.counter }}:</label>
         {{ form.name }}
         {% if form.errors %}
@@ -14,31 +22,35 @@
             </div>
         {% endif %}
     </div>
-
     {% endfor %}
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const form = document.querySelector('form');
-        const submitButton = form.querySelector('button[type="submit"]');
-        const nameInputs = form.querySelectorAll('input');
-
-        function checkInputs() {
-            let allFilled = true;
-            nameInputs.forEach(input => {
-                if (!input.value.trim()) {
-                    allFilled = false;
-                }
-            });
-            submitButton.disabled = !allFilled;
-        }
-
-        nameInputs.forEach(input => {
-            input.addEventListener('input', checkInputs);
-        });
-
-        checkInputs();
-    });
-    </script>
     <button type="submit">Save Participants</button>
 </form>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    const submitButton = form.querySelector('button[type="submit"]');
+    const nameInputs = form.querySelectorAll('input[name$="-name"]');
+
+    function checkInputs() {
+        console.log("Checking inputs...");
+        let allFilled = true;
+        nameInputs.forEach(input => {
+            if (!input.value.trim()) {
+                allFilled = false;
+            }
+        });
+        submitButton.disabled = !allFilled;
+    }
+
+    nameInputs.forEach(input => {
+        input.addEventListener('input', checkInputs);
+    });
+
+    checkInputs();
+
+    form.addEventListener('submit', function() {
+        console.log("Form submitted");
+    });
+});
+</script>
 {% endblock %}

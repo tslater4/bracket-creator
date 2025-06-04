@@ -1,7 +1,7 @@
-add update functionality for brackets
+~~ add update functionality for brackets ~~
 
-    > there should be CRUD for participants but I think deletion would break the system. Maybe deleting a participant
-    swaps it with deleted-participant and counts it as a DQ
+    ~~ > there should be CRUD for participants but I think deletion would break the system. Maybe deleting a participant
+    swaps it with deleted-participant and counts it as a DQ ~~
 
 display tournament graph -- probably the most difficult step
 
