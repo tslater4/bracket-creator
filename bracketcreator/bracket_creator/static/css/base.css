@@ -43,3 +43,12 @@ nav a {
     text-decoration: none;
     margin: 0 15px;
 }
+
+.finalRoundWinner {
+    font-size: 50px;
+    text-align: center;
+    margin-top: 20px;
+    color: gold;
+    font-weight: bold;
+    text-shadow: 2px 2px 8px #000;
+}

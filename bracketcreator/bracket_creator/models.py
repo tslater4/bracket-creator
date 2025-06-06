@@ -14,10 +14,18 @@ class TournamentBracket(models.Model):
         (32, '32 Participants'),
     ]
     size = models.IntegerField(choices=size_choices, default=8)
-
+    started = models.BooleanField(default=False)
 class Participant(models.Model):
     name = models.CharField(max_length=100)
     bracket = models.ForeignKey(TournamentBracket, on_delete=models.CASCADE, related_name="participants")
 
     class Meta:
         ordering = ['id']
+
+class Match(models.Model):
+    bracket = models.ForeignKey(TournamentBracket, on_delete=models.CASCADE, related_name='matches')
+    round = models.IntegerField()
+    player1 = models.ForeignKey(Participant, on_delete=models.SET_NULL, null=True, related_name='+')
+    player2 = models.ForeignKey(Participant, on_delete=models.SET_NULL, null=True, related_name='+')
+    winner = models.ForeignKey(Participant, on_delete=models.SET_NULL, null=True, blank=True, related_name='+')
+

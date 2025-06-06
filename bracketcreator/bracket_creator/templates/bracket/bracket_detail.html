@@ -16,4 +16,76 @@
     </button>
     <a href="{% url 'participant-update' object.pk %}">Edit Participants</a>
 </form>
+
+{% if object.matches.all %}
+    <h4>Matches</h4>
+    {% for round_num in rounds %}
+        <h5>Round {{ round_num }}</h5>
+        <ul>
+            {% for match in object.matches.all|dictsort:"round" %}
+                {% if match.round == round_num %}
+                    <li>
+                        {{ match.player1.name }} vs {{ match.player2.name }}
+                        {% if match.winner %}
+                        - Winner: {{ match.winner.name }}
+                            {% if round_num == final_round %}
+                                <div class="finalRoundWinner">
+                                    Tournament Winner: {{ match.winner.name }}
+                                </div>
+                                {% endif %}
+                        {% elif match.player1 and match.player2 %}
+                            <form method="post" action="{% url 'set-winner' match.id %}">
+                                {% csrf_token %}
+                                <button name="winner" value="{{ match.player1.id }}">{{ match.player1.name }}</button>
+                                <button name="winner" value="{{ match.player2.id }}">{{ match.player2.name }}</button>
+                            </form>
+                        {% endif %}
+                    </li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+    {% endfor %}
+{% endif %}
+{% if object.started and tournamentEnded %}
+    <h2>This tournament has ended!</h2>
+{% endif %}
+{% if not object.started %}
+    <button id="start-tournament-btn">Start Tournament</button>
+{% endif %}
+    <div id="tournament-status"></div>
+
+
+<script>
+
+// checks if any choice buttons are left
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('winnerChoice')) {
+        setTimeout(checkWinnerButtons, 500);
+    }
+});
+const startBtn = document.getElementById('start-tournament-btn');
+if (startBtn) {
+    startBtn.onclick = function() {
+        let matchStarted = false;
+        startBtn.style.display = "none";
+        fetch("{% url 'start-tournament' object.pk %}", {
+            method: "POST",
+            headers: {
+                "X-CSRFToken": "{{ csrf_token }}",
+                "Accept": "application/json"
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if(data.status === "ok") {
+                document.getElementById('tournament-status').innerText = "Tournament started!";
+                location.reload();
+            } else {
+                document.getElementById('tournament-status').innerText = "Error starting tournament.";
+            }
+        });
+    };
+}
+</script>
+
 {% endblock %}

@@ -34,4 +34,6 @@ urlpatterns = [
     path('bracket/<int:pk>/delete/', bracket_views.BracketDeleteView.as_view(), name='bracket-delete'),
     path('bracket/<int:bracket_pk>/participants/', bracket_views.ParticipantCreateView.as_view(), name='participant-add'),
     path('bracket/<int:bracket_pk>/participants/update/', bracket_views.BracketUpdateView.as_view(), name='participant-update'),
+    path('bracket/<int:pk>/set_start/', bracket_views.startTournament, name='start-tournament'),
+    path('match/<int:match_id>/set_winner/', bracket_views.set_winner, name='set-winner'),
 ]

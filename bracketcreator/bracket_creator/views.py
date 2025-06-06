@@ -10,7 +10,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
 from django import forms
 from django.forms import inlineformset_factory, modelformset_factory
-from .models import TournamentBracket, Participant
+from .models import TournamentBracket, Participant, Match
+from django.http import JsonResponse
 
 
 def signup_view(request):
@@ -100,6 +101,17 @@ class BracketDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['participants'] = self.object.participants.all()
+        rounds = (
+            self.object.matches.all()
+            .values_list('round', flat=True)
+            .distinct()
+            .order_by('round')
+        )
+        context['rounds'] = rounds
+        if rounds:
+            context['final_round'] = rounds.last()
+        else:
+            context['final_round'] = None
         return context
     
 class BracketDeleteView(LoginRequiredMixin, DeleteView):
@@ -148,8 +160,50 @@ class BracketUpdateView(LoginRequiredMixin, View):
             for obj in formset.deleted_objects:
                 obj.delete()
             return redirect('bracket-detail', pk=bracket.pk)
-        return render(request, self.template_name, {
-            'formset': formset,
-            'bracket_form': bracket_form,
-            'bracket': bracket
-        })
+    
+def startTournament(request, pk):
+    if request.method == "POST" and request.user.is_authenticated:
+        bracket = get_object_or_404(TournamentBracket, pk=pk, user=request.user)
+        bracket.started = True
+        bracket.save()
+        participants = list(bracket.participants.all())
+        created = 0
+        for i in range(0, len(participants), 2):
+            p1 = participants[i]
+            p2 = participants[i+1] if i+1 < len(participants) else None
+            Match.objects.get_or_create(
+                bracket=bracket,
+                round=1,
+                player1=p1,
+                player2=p2
+            )
+            created += 1
+        return JsonResponse({'status': 'ok', 'created': created})
+    return JsonResponse({'status': 'error'}, status=400)
+
+def set_winner(request, match_id):
+    match = get_object_or_404(Match, id=match_id)
+    winner_id = request.POST.get('winner')
+    if winner_id:
+        winner = get_object_or_404(Participant, id=winner_id)
+        match.winner = winner
+        match.save()
+        bracket = match.bracket 
+        current_round = match.round
+        next_round = current_round + 1
+        participant_ids = list(bracket.matches.filter(round=current_round).values_list('winner', flat=True))
+        participants = list(Participant.objects.filter(id__in=participant_ids))
+
+        if all(match.winner for match in bracket.matches.filter(round=current_round)):
+            participants.sort(key=lambda p: participant_ids.index(p.id))
+            for i in range(0, len(participants), 2):
+                p1 = participants[i]
+                p2 = participants[i+1] if i+1 < len(participants) else None
+                Match.objects.get_or_create(
+                    bracket=bracket,
+                    round=next_round,
+                    player1=p1,
+                    player2=p2
+                )
+        match.save()
+    return redirect('bracket-detail', pk=match.bracket.pk)
