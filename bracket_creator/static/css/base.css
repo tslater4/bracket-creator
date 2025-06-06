@@ -185,6 +185,8 @@ button:hover, .btn:hover {
     padding: 0.75rem 2rem;
     width: fit-content;
 }
+
+/* this class refers to basically any form thats actually a practical form and not just a smarter button */
 .bracketForm {
     display: flex;
     flex-direction: column;
