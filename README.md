@@ -4,7 +4,7 @@ A simple web app that allows users to create brackets with rounds and selectable
 Inspiration came to me after I watched the [Genesis 4 Melee finals](https://youtu.be/qIsTgPo71Kc) and thought about how cool top 8s are. 
 
 ## Deployment Link:
-{to be made}
+https://bracket-creator-app-fb67a7af1980.herokuapp.com/
 
 ## Attributions:
 - Built with [Django](https://www.djangoproject.com/) (BSD License)
