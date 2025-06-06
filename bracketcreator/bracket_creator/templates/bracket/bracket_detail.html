@@ -1,44 +1,60 @@
 {% extends "base.html" %}
 {% block content %}
-<h2>{{ object.name }}</h2>
+<strong><header>{{ object.name }}</header></strong>
 
-<h4>Participants</h4> 
-<ul>
+<h2>Participants</h2> 
+<ul class="participantsList">
     {% for participant in object.participants.all %}
         <li>{{ participant.name }}</li>
     {% endfor %}
 </ul>
-<form method="post" action="{% url 'bracket-delete' object.pk %}">
-    {% csrf_token %}
-    <button type="submit"
+<div class="bracketOptions">
+    <form method="post" action="{% url 'bracket-delete' object.pk %}">
+        {% csrf_token %}
+        <button type="submit"
         onclick="return confirm('Are you sure you want to delete this bracket?');">
         Delete
     </button>
-    <a href="{% url 'participant-update' object.pk %}">Edit Participants</a>
-</form>
+    </form>
+    <a href="{% url 'participant-update' object.pk %}" style="margin-left: 10px;">Edit Participants</a>
+</div>
 
 {% if object.matches.all %}
-    <h4>Matches</h4>
+    <h2>Matches</h2>
     {% for round_num in rounds %}
-        <h5>Round {{ round_num }}</h5>
-        <ul>
+        <h3 id="roundNumberHeader">Round {{ round_num }}</h3>
+        <ul class="bracketMatchesContainer">
             {% for match in object.matches.all|dictsort:"round" %}
                 {% if match.round == round_num %}
                     <li>
-                        {{ match.player1.name }} vs {{ match.player2.name }}
+                        {% if not match.player2 %}
+                        <div class="finalRoundWinner">{{ match.player1.name }} wins the tournament!</div>
+                        {# if the last round chooses a winner this deletes the header for the round it was in #}
+                        <script>
+                        document.addEventListener('DOMContentLoaded', function() {
+                            const headers = document.querySelectorAll('#roundNumberHeader');
+                            if (headers.length > 0) {
+                                headers[headers.length - 1].remove();
+                            }
+                        });
+                        </script>
+                        {% else %}
+                        <div id="matchup">
+                            <span style="color: skyblue">{{ match.player1.name }}</span> vs <span style="color: rgb(0, 255, 4);;">{{ match.player2.name }}</span>
+                        </div>
+                        {% endif %}
                         {% if match.winner %}
-                        - Winner: {{ match.winner.name }}
-                            {% if round_num == final_round %}
-                                <div class="finalRoundWinner">
-                                    Tournament Winner: {{ match.winner.name }}
-                                </div>
-                                {% endif %}
-                        {% elif match.player1 and match.player2 %}
-                            <form method="post" action="{% url 'set-winner' match.id %}">
-                                {% csrf_token %}
-                                <button name="winner" value="{{ match.player1.id }}">{{ match.player1.name }}</button>
-                                <button name="winner" value="{{ match.player2.id }}">{{ match.player2.name }}</button>
-                            </form>
+                        <div style="text-align: center;">
+                            Winner: {{ match.winner.name }}
+                        </div>
+                        {% else %}
+                            {% if match.player1 and match.player2 %}
+                                <form method="post" class="pickWinnerForm" action="{% url 'set-winner' match.id %}">
+                                    {% csrf_token %}
+                                    <button name="winner" class="chooseWinnerBtn" value="{{ match.player1.id }}">{{ match.player1.name }}</button>
+                                    <button name="winner" class="chooseWinnerBtn" value="{{ match.player2.id }}">{{ match.player2.name }}</button>
+                                </form>
+                            {% endif %}
                         {% endif %}
                     </li>
                 {% endif %}
@@ -52,7 +68,6 @@
 {% if not object.started %}
     <button id="start-tournament-btn">Start Tournament</button>
 {% endif %}
-    <div id="tournament-status"></div>
 
 
 <script>
@@ -78,10 +93,7 @@ if (startBtn) {
         .then(response => response.json())
         .then(data => {
             if(data.status === "ok") {
-                document.getElementById('tournament-status').innerText = "Tournament started!";
                 location.reload();
-            } else {
-                document.getElementById('tournament-status').innerText = "Error starting tournament.";
             }
         });
     };

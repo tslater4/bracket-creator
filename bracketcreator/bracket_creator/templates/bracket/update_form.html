@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 <h2>Edit Bracket and Participants for "{{ bracket.name }}"</h2>
-<form method="post">
+<form method="post" class="bracketForm">
     {% csrf_token %}
     <h3>Bracket Info</h3>
     <p>
