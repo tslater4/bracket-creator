@@ -1,6 +1,8 @@
 {% extends "base.html" %}
+{% load static %}
+
 {% block content %}
-<strong><header>{{ object.name }}</header></strong>
+<h1>{{ object.name }}</h1>
 
 <h2>Participants</h2> 
 <ul class="participantsList">
@@ -8,96 +10,83 @@
         <li>{{ participant.name }}</li>
     {% endfor %}
 </ul>
+
 <div class="bracketOptions">
-    <form method="post" action="{% url 'bracket-delete' object.pk %}">
-        {% csrf_token %}
-        <button type="submit"
-        onclick="return confirm('Are you sure you want to delete this bracket?');">
-        Delete
-    </button>
-    </form>
-    <a href="{% url 'participant-update' object.pk %}" style="margin-left: 10px;">Edit Participants</a>
+    {% if not object.started %}
+        <button id="start-tournament-btn" data-bracket-pk="{{ object.pk }}" data-csrf-token="{{ csrf_token }}">Start Tournament</button>
+    {% endif %}
+    <a href="{% url 'bracket-delete' object.pk %}" class="btn">Delete</a>
+    <a href="{% url 'participant-update' object.pk %}" class="btn">Edit Participants</a>
 </div>
 
 {% if object.matches.all %}
-    <h2>Matches</h2>
-    {% for round_num in rounds %}
-        <h3 id="roundNumberHeader">Round {{ round_num }}</h3>
-        <ul class="bracketMatchesContainer">
-            {% for match in object.matches.all|dictsort:"round" %}
-                {% if match.round == round_num %}
-                    <li>
-                        {% if not match.player2 %}
-                        <div class="finalRoundWinner">{{ match.player1.name }} wins the tournament!</div>
-                        {# if the last round chooses a winner this deletes the header for the round it was in #}
-                        <script>
-                        document.addEventListener('DOMContentLoaded', function() {
-                            const headers = document.querySelectorAll('#roundNumberHeader');
-                            if (headers.length > 0) {
-                                headers[headers.length - 1].remove();
-                            }
-                        });
-                        </script>
-                        {% else %}
-                        <div id="matchup">
-                            <span style="color: skyblue">{{ match.player1.name }}</span> vs <span style="color: rgb(0, 255, 4);;">{{ match.player2.name }}</span>
-                        </div>
-                        {% endif %}
-                        {% if match.winner %}
-                        <div style="text-align: center;">
-                            Winner: {{ match.winner.name }}
-                        </div>
-                        {% else %}
-                            {% if match.player1 and match.player2 %}
-                                <form method="post" class="pickWinnerForm" action="{% url 'set-winner' match.id %}">
-                                    {% csrf_token %}
-                                    <button name="winner" class="chooseWinnerBtn" value="{{ match.player1.id }}">{{ match.player1.name }}</button>
-                                    <button name="winner" class="chooseWinnerBtn" value="{{ match.player2.id }}">{{ match.player2.name }}</button>
-                                </form>
+    <h2>Tournament Bracket</h2>
+    <div id="simple-bracket-container">
+        <div class="bracket-rounds">
+            {% for round in round_data %}
+                <div class="bracket-round">
+                    <h3>{{ round.name }}</h3>
+                    <div class="round-matches">
+                        {% for match in object.matches.all %}
+                            {% if match.round == round.number %}
+                                <div class="match-card">
+                                    <div class="match-players">
+                                        {% if match.player1 %}
+                                            <div class="player {% if match.winner == match.player1 %}winner{% endif %}">
+                                                <span class="player-name">{{ match.player1.name }}</span>
+                                                {% if not match.winner and match.player2 %}
+                                                    <form method="post" action="{% url 'set-winner' match.id %}" style="display: inline;">
+                                                        {% csrf_token %}
+                                                        <button name="winner" value="{{ match.player1.id }}" class="win-btn">✓</button>
+                                                    </form>
+                                                {% endif %}
+                                            </div>
+                                        {% endif %}
+                                        
+                                        {% if match.player2 %}
+                                            <div class="player {% if match.winner == match.player2 %}winner{% endif %}">
+                                                <span class="player-name">{{ match.player2.name }}</span>
+                                                {% if not match.winner %}
+                                                    <form method="post" action="{% url 'set-winner' match.id %}" style="display: inline;">
+                                                        {% csrf_token %}
+                                                        <button name="winner" value="{{ match.player2.id }}" class="win-btn">✓</button>
+                                                    </form>
+                                                {% endif %}
+                                            </div>
+                                        {% else %}
+                                            {% if match.winner %}
+                                                <div class="champion">
+                                                    {{ match.winner.name }} - CHAMPION!
+                                                </div>
+                                            {% endif %}
+                                        {% endif %}
+                                    </div>
+                                    {% if match.winner and match.player2 %}
+                                        <div class="match-result">{{ match.winner.name }} advances</div>
+                                    {% endif %}
+                                </div>
                             {% endif %}
-                        {% endif %}
-                    </li>
-                {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
             {% endfor %}
-        </ul>
-    {% endfor %}
-{% endif %}
-{% if object.started and tournamentEnded %}
-    <h2>This tournament has ended!</h2>
-{% endif %}
-{% if not object.started %}
-    <button id="start-tournament-btn">Start Tournament</button>
+        </div>
+    </div>
+{% else %}
+    <p>No matches yet. Start the tournament to generate matches.</p>
 {% endif %}
 
-
+<script src="{% static 'js/bracket.js' %}"></script>
 <script>
-
-// checks if any choice buttons are left
-document.addEventListener('click', function(e) {
-    if (e.target.classList.contains('winnerChoice')) {
-        setTimeout(checkWinnerButtons, 500);
+document.addEventListener('DOMContentLoaded', function() {
+    var startBtn = document.getElementById('start-tournament-btn');
+    if (startBtn) {
+        startBtn.addEventListener('click', function() {
+            var bracketPk = this.getAttribute('data-bracket-pk');
+            var csrfToken = this.getAttribute('data-csrf-token');
+            startTournament(bracketPk, csrfToken);
+        });
     }
 });
-const startBtn = document.getElementById('start-tournament-btn');
-if (startBtn) {
-    startBtn.onclick = function() {
-        let matchStarted = false;
-        startBtn.style.display = "none";
-        fetch("{% url 'start-tournament' object.pk %}", {
-            method: "POST",
-            headers: {
-                "X-CSRFToken": "{{ csrf_token }}",
-                "Accept": "application/json"
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if(data.status === "ok") {
-                location.reload();
-            }
-        });
-    };
-}
 </script>
-
 {% endblock %}

@@ -1,7 +1,5 @@
 from django.shortcuts import render
-
-# Create your views here.
-
+from django.contrib.auth import login
 from django.contrib.auth.forms import UserCreationForm
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
@@ -18,8 +16,9 @@ def signup_view(request):
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
         if form.is_valid():
-            form.save()
-            return redirect('login')
+            user = form.save()
+            login(request, user)
+            return redirect('bracket-list')
     else:
         form = UserCreationForm()
     return render(request, 'registration/signup.html', {'form': form})
@@ -101,17 +100,40 @@ class BracketDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['participants'] = self.object.participants.all()
-        rounds = (
+        
+        rounds = list(
             self.object.matches.all()
             .values_list('round', flat=True)
             .distinct()
             .order_by('round')
         )
-        context['rounds'] = rounds
-        if rounds:
-            context['final_round'] = rounds.last()
+        
+        participant_count = self.object.participants.count()
+        if participant_count > 0:
+            import math
+            total_rounds_needed = math.ceil(math.log2(participant_count))
         else:
-            context['final_round'] = None
+            total_rounds_needed = 0
+        
+        round_data = []
+        for round_num in rounds:
+            if round_num == total_rounds_needed:
+                round_name = "Final"
+            elif round_num == total_rounds_needed - 1:
+                round_name = "Semi-Final"
+            elif round_num == total_rounds_needed - 2:
+                round_name = "Quarter-Final"
+            elif round_num == total_rounds_needed + 1:
+                round_name = "Winner"
+            else:
+                round_name = f"Round {round_num}"
+            
+            round_data.append({
+                'number': round_num,
+                'name': round_name
+            })
+        
+        context['round_data'] = round_data
         return context
     
 class BracketDeleteView(LoginRequiredMixin, DeleteView):

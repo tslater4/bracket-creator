@@ -136,7 +136,7 @@ h1, h2, h3, h4, h5 {
     align-items: flex-start;
     font-size: 2.125rem;
 }
-/* button hyperlinks */
+
 .btn {
     background-color: white;
     color: black;
@@ -155,7 +155,7 @@ h1, h2, h3, h4, h5 {
     line-height: 2.125rem;
     width: auto;    
 }
-/* actual buttons */
+
 button {
     background-color: white;
     color: black;
@@ -186,7 +186,6 @@ button:hover, .btn:hover {
     width: fit-content;
 }
 
-/* this class refers to basically any form thats actually a practical form and not just a smarter button */
 .bracketForm {
     display: flex;
     flex-direction: column;
@@ -243,4 +242,146 @@ button:hover, .btn:hover {
     height: 3rem; 
     font-size: 1rem; 
     box-sizing: border-box;
+}
+
+#bracket-container {
+    margin: 2rem auto;
+    padding: 2rem;
+    background-color: #2a2a2a;
+    border-radius: 10px;
+    min-height: 400px;
+}
+
+.jQBracket {
+    background-color: transparent !important;
+}
+
+.jQBracket .team {
+    background-color: #392b2b !important;
+    border: 1px solid #4bccff !important;
+    color: white !important;
+}
+
+.jQBracket .team.win {
+    background-color: #4CAF50 !important;
+}
+
+#simple-bracket-container {
+    margin: 2rem auto;
+    padding: 2rem;
+    background-color: #2a2a2a;
+    border-radius: 10px;
+    overflow-x: auto;
+}
+
+.bracket-rounds {
+    display: flex;
+    gap: 3rem;
+    align-items: flex-start;
+    justify-content: center;
+    min-width: max-content;
+}
+
+.bracket-round {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 200px;
+}
+
+.bracket-round h3 {
+    color: #4bccff;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.round-matches {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.match-card {
+    background: #1a1a1a;
+    border: 2px solid #4bccff;
+    border-radius: 8px;
+    padding: 1rem;
+    min-width: 180px;
+    max-width: 250px;
+    position: relative;
+}
+
+.match-players {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.player {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem;
+    background: #333;
+    border-radius: 4px;
+    color: white;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+.player-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+    margin-right: 8px;
+}
+
+.player.winner {
+    background: #4CAF50;
+    font-weight: bold;
+}
+
+.champion {
+    text-align: center;
+    font-size: 1.2rem;
+    color: gold;
+    font-weight: bold;
+    padding: 1rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.win-btn {
+    background: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    font-size: 12px;
+    margin-left: 8px;
+}
+
+.win-btn:hover {
+    background: #45a049;
+}
+
+.match-result {
+    text-align: center;
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
+    color: #4CAF50;
+    font-weight: bold;
+}
+
+@media (max-width: 768px) {
+    .bracket-rounds {
+        flex-direction: column;
+        align-items: center;
+    }
 }
