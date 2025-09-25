@@ -1,4 +1,5 @@
 <img width="1902" height="919" alt="image" src="https://github.com/user-attachments/assets/e045c19f-730b-4d82-a824-8cb0141e4b02" />
+
 # Bracket Creator
 
 A web application for creating and managing single-elimination tournament brackets. This project was developed to provide a clean, ad-free alternative to existing bracket websites that are often cluttered with advertisements and unnecessary features.
